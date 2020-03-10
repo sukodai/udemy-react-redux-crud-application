@@ -11,6 +11,7 @@ import * as serviceWorker from './serviceWorker';
 
 const store = createStore(reducer)
 
+// どのコンポーネントでもstoreを利用可能にする
 ReactDOM.render(
   <Provider store={store}>
     <App />
