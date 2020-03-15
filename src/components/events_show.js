@@ -3,13 +3,22 @@ import {connect} from 'react-redux';
 import {Field, reduxForm} from 'redux-form'
 import {Link} from 'react-router-dom'
 
-import {postEvent} from '../actions'
+import {getEvent, deleteEvent, putEvent} from '../actions'
 
-class EventsNew extends Component {
+class EventsShow extends Component {
   constructor(props) {
+    console.log("EventsShow")
     super(props)
     this.onSubmit = this.onSubmit.bind(this)
+    this.onDeleteClick = this.onDeleteClick.bind(this)
   }
+  
+  // レンダリングが完了したらデータをとってくる
+  componentDidMount(){
+    const {id} = this.props.match.params
+    if (id) this.props.getEvent(id)
+  }
+
   renderField(field){
     const {input, label, type, meta: {touched, error}} = field
     return (
@@ -20,8 +29,18 @@ class EventsNew extends Component {
     )
   }
   
+
+async onDeleteClick(){
+  const {id} = this.props.match.params
+  //console.log(id)
+
+  // idをactionに渡す
+  await this.props.deleteEvent(id)
+  this.props.history.push("/")
+}
+
   async onSubmit(values){
-    await this.props.postEvent(values)
+    await this.props.putEvent(values)
     this.props.history.push("/")
   }
 
@@ -38,7 +57,9 @@ class EventsNew extends Component {
         </div>
         <div>
           <input type="submit" value="Submit" disabled={pristine || submitting || invalid} />
+          {/* "/" でトップページに戻る */}
           <Link to="/">Cancel</Link>
+          <Link to="/" onClick={this.onDeleteClick}>Delete</Link>
         </div>
       </form>
     )
@@ -56,7 +77,14 @@ const validate = values => {
 
 
 // connectにバインドする
-const mapDispatchToProps = ({postEvent})
-export default connect(null, mapDispatchToProps)(
-  reduxForm({validate, form: 'eventNewForm'})(EventsNew)
+const mapStateToProps = (state, ownProps) => {
+  const event = state.events[ownProps.match.params.id]
+  return {initialValues: event, event}
+}
+
+const mapDispatchToProps = ({deleteEvent, getEvent, putEvent})
+
+// reducer側の情報をbindする
+export default connect(mapStateToProps, mapDispatchToProps)(
+  reduxForm({validate, form: 'eventShowForm', enableReinitialize:true})(EventsShow)
 )
